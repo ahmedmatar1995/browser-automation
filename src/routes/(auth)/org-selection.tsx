@@ -1,8 +1,10 @@
+import { checkUser } from '@/lib/check-auth'
 import { OrganizationList } from '@clerk/react'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/(auth)/org-selection')({
   component: RouteComponent,
+  beforeLoad: async () => await checkUser(),
 })
 
 function RouteComponent() {
