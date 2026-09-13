@@ -9,25 +9,30 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
+import { Route as dashboardRouteRouteImport } from './routes/(dashboard)/route'
 import { Route as authOrgSelectionRouteImport } from './routes/(auth)/org-selection'
+import { Route as dashboardIndexRouteImport } from './routes/(dashboard)/index'
 import { Route as authSignInSplatRouteImport } from './routes/(auth)/sign-in.$'
 import { Route as authSignUpSplatRouteImport } from './routes/(auth)/sign-up.$'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const dashboardRouteRoute = dashboardRouteRouteImport.update({
+  id: '/(dashboard)',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authOrgSelectionRoute = authOrgSelectionRouteImport.update({
   id: '/org-selection',
   path: '/org-selection',
   getParentRoute: () => authRouteRoute,
+} as any)
+const dashboardIndexRoute = dashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => dashboardRouteRoute,
 } as any)
 const authSignInSplatRoute = authSignInSplatRouteImport.update({
   id: '/sign-in/$',
@@ -41,57 +46,60 @@ const authSignUpSplatRoute = authSignUpSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/org-selection': typeof authOrgSelectionRoute
+  '/': typeof dashboardIndexRoute
   '/sign-in/$': typeof authSignInSplatRoute
   '/sign-up/$': typeof authSignUpSplatRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/org-selection': typeof authOrgSelectionRoute
+  '/': typeof dashboardIndexRoute
   '/sign-in/$': typeof authSignInSplatRoute
   '/sign-up/$': typeof authSignUpSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
+  '/(dashboard)': typeof dashboardRouteRouteWithChildren
   '/(auth)/org-selection': typeof authOrgSelectionRoute
+  '/(dashboard)/': typeof dashboardIndexRoute
   '/(auth)/sign-in/$': typeof authSignInSplatRoute
   '/(auth)/sign-up/$': typeof authSignUpSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/org-selection' | '/sign-in/$' | '/sign-up/$'
+  fullPaths: '/org-selection' | '/' | '/sign-in/$' | '/sign-up/$'
   fileRoutesByTo: FileRoutesByTo
+  to: '/org-selection' | '/' | '/sign-in/$' | '/sign-up/$'
   id:
     | '__root__'
-    | '/'
     | '/(auth)'
+    | '/(dashboard)'
     | '/(auth)/org-selection'
+    | '/(dashboard)/'
     | '/(auth)/sign-in/$'
     | '/(auth)/sign-up/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
+  dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/(auth)': {
       id: '/(auth)'
       path: ''
       fullPath: ''
       preLoaderRoute: typeof authRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(dashboard)': {
+      id: '/(dashboard)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof dashboardRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/org-selection': {
@@ -100,6 +108,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/org-selection'
       preLoaderRoute: typeof authOrgSelectionRouteImport
       parentRoute: typeof authRouteRoute
+    }
+    '/(dashboard)/': {
+      id: '/(dashboard)/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof dashboardIndexRouteImport
+      parentRoute: typeof dashboardRouteRoute
     }
     '/(auth)/sign-in/$': {
       id: '/(auth)/sign-in/$'
@@ -121,22 +136,32 @@ declare module '@tanstack/react-router' {
 interface authRouteRouteChildren {
   authOrgSelectionRoute: typeof authOrgSelectionRoute
   authSignInSplatRoute: typeof authSignInSplatRoute
-  authSignUpSplatRoute: typeof authSignUpSplatRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
   authOrgSelectionRoute: authOrgSelectionRoute,
   authSignInSplatRoute: authSignInSplatRoute,
-  authSignUpSplatRoute: authSignUpSplatRoute,
 }
 
 const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface dashboardRouteRouteChildren {
+  dashboardIndexRoute: typeof dashboardIndexRoute
+}
+
+const dashboardRouteRouteChildren: dashboardRouteRouteChildren = {
+  dashboardIndexRoute: dashboardIndexRoute,
+}
+
+const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
+  dashboardRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
+  dashboardRouteRoute: dashboardRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
