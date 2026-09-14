@@ -4,7 +4,7 @@ type WorkflowGraph = { nodes: []; edges: [] }
 
 export const workflows = pgTable('workflows', {
   id: uuid('id').primaryKey().defaultRandom(),
-  orgId: text('org_id').notNull(),
+  orgId: text('orgId').notNull(),
   name: text('name').notNull(),
   graph: jsonb('graph').$type<WorkflowGraph>(),
   createdAt: timestamp('created_at').notNull().defaultNow(),

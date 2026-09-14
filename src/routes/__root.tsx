@@ -6,6 +6,8 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { ThemeProvider } from 'tanstack-theme-kit'
 
 import appCss from '../styles.css?url'
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
+import { Toaster } from '@/components/ui/sonner'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -32,6 +34,7 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const client = new QueryClient()
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -45,7 +48,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange
         >
           <ClerkProvider afterSignOutUrl="/sign-in">
-            {children}
+            <QueryClientProvider client={client}>
+              {children}
+              <Toaster />
+            </QueryClientProvider>
             <TanStackDevtools
               config={{
                 position: 'bottom-right',

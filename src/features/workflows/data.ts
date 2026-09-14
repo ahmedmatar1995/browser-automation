@@ -15,10 +15,13 @@ export async function listWorkflow(id: Workflow['id'], orgId: string) {
 }
 
 export async function insertWorkflow(name: string, orgId: string) {
-  const workflow = await db.insert(workflows).values({
-    name,
-    orgId,
-  })
+  const workflow = await db
+    .insert(workflows)
+    .values({
+      name,
+      orgId,
+    })
+    .returning()
 
   return workflow
 }
