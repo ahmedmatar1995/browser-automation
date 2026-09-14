@@ -2,7 +2,7 @@ import { checkOrg, checkUser } from '@/lib/check-auth'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/app-sidebar'
-import { listWorkflowsAction } from '@/features /workflows/actions'
+import { listWorkflowsAction } from '@/features/workflows/actions'
 import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 

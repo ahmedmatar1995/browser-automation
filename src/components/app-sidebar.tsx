@@ -6,7 +6,7 @@ import {
   SidebarHeader,
   SidebarTrigger,
 } from './ui/sidebar'
-import { WorkflowNav } from '@/features /workflows/components/workflow-nav'
+import { WorkflowNav } from '@/features/workflows/components/workflow-nav'
 import type { Workflow } from '@/lib/db/schema'
 
 export function AppSidebar({ workflows }: { workflows: Workflow[] }) {

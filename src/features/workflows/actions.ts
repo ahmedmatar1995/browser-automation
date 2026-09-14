@@ -37,6 +37,6 @@ export const insertWorkflowAction = createServerFn()
   .handler(async ({ data }) => {
     const { userId, orgId } = await auth()
     if (!userId || !orgId) throw new Error('unAuthorized')
-    const workflow = await insertWorkflow(orgId, data.name)
+    const workflow = await insertWorkflow(data.name, orgId)
     return workflow
   })
