@@ -6,8 +6,10 @@ import {
   SidebarHeader,
   SidebarTrigger,
 } from './ui/sidebar'
+import { WorkflowNav } from '@/features /workflows/components/workflow-nav'
+import type { Workflow } from '@/lib/db/schema'
 
-export function AppSidebar() {
+export function AppSidebar({ workflows }: { workflows: Workflow[] }) {
   return (
     <Sidebar
       collapsible="icon"
@@ -28,7 +30,9 @@ export function AppSidebar() {
         />
         <SidebarTrigger />
       </SidebarHeader>
-      <SidebarContent className="py-6">items list</SidebarContent>
+      <SidebarContent className="py-6">
+        <WorkflowNav workflows={workflows} />
+      </SidebarContent>
       <SidebarFooter className="p-2 group-data-[collapsible=icon]:items-center">
         <UserButton
           appearance={{
