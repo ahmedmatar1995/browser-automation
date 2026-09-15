@@ -3,6 +3,8 @@ import { listWorkflows, listWorkflow, insertWorkflow } from './data'
 import { auth } from '@clerk/tanstack-react-start/server'
 import { z } from 'zod'
 import type { Workflow } from '@/lib/db/schema'
+import { tasks } from '@trigger.dev/sdk'
+import type { helloWorldTask } from '@/trigger/example'
 
 export const listWorkflowsAction = createServerFn({ strict: false }).handler(
   async () => {
@@ -40,3 +42,11 @@ export const insertWorkflowAction = createServerFn()
     const [workflow] = await insertWorkflow(data.name, orgId)
     return workflow
   })
+
+export const runHelloWorldTrigger = createServerFn().handler(async () => {
+  const handle = await tasks.trigger<typeof helloWorldTask>('hello-world', {
+    message: 'hello world trigger from tanstack react start',
+  })
+
+  return handle
+})
