@@ -1,18 +1,21 @@
-import { useCallback, useSyncExternalStore } from 'react'
+import { useSyncExternalStore } from 'react'
 import {
   ReactFlow,
-  useNodesState,
-  useEdgesState,
   Controls,
-  addEdge,
   ConnectionLineType,
   MiniMap,
+  Panel,
 } from '@xyflow/react'
 import { useTheme } from 'tanstack-theme-kit'
-import type { Edge, Connection, ColorMode, NodeTypes } from '@xyflow/react'
+import type { Edge, ColorMode, NodeTypes } from '@xyflow/react'
+import { AvatarStack } from '@liveblocks/react-ui'
+import { useLiveblocksFlow, Cursors } from '@liveblocks/react-flow'
 import { StepNode } from './step-node'
 import type { StepNodeType } from '../nodes/node-registry'
+
 import '@xyflow/react/dist/style.css'
+import '@liveblocks/react-ui/styles.css'
+import '@liveblocks/react-flow/styles.css'
 
 const initialNodes: StepNodeType[] = [
   {
@@ -66,16 +69,19 @@ function useMounted() {
 }
 
 export function Canvas() {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
-
   const mounted = useMounted()
   const { theme } = useTheme()
 
-  const onConnect = useCallback(
-    (connection: Connection) => setEdges((eds) => addEdge(connection, eds)),
-    [setEdges],
-  )
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, onDelete } =
+    useLiveblocksFlow({
+      suspense: true,
+      nodes: {
+        initial: initialNodes,
+      },
+      edges: {
+        initial: initialEdges,
+      },
+    })
 
   const colorMode: ColorMode = mounted
     ? theme === 'dark'
@@ -95,6 +101,7 @@ export function Canvas() {
         maxZoom={1}
         fitView
         onConnect={onConnect}
+        onDelete={onDelete}
         colorMode={colorMode}
         connectionLineType={ConnectionLineType.SmoothStep}
         connectionLineStyle={{ stroke: 'var(--border)' }}
@@ -111,7 +118,11 @@ export function Canvas() {
         }
       >
         <Controls />
+        <Cursors />
         <MiniMap />
+        <Panel position="top-right">
+          <AvatarStack />
+        </Panel>
       </ReactFlow>
     </div>
   )

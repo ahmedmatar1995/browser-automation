@@ -15,7 +15,26 @@ export function Room({
   children: ReactNode
 }) {
   return (
-    <LiveblocksProvider authEndpoint="/liveblocks/auth" throttle={16}>
+    <LiveblocksProvider
+      authEndpoint="/liveblocks/auth"
+      resolveUsers={async ({ userIds }) => {
+        try {
+          const response = await fetch('/liveblocks/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userIds }),
+          })
+          if (!response.ok) return undefined
+          // users endpoint returns (UserInfo | null)[], Liveblocks accepts null/undefined for unknown
+          return (await response.json()) as any
+        } catch {
+          return undefined
+        }
+      }}
+      throttle={16}
+    >
       <RoomProvider id={workflowId}>
         <ClientSideSuspense
           fallback={

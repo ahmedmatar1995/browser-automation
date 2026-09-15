@@ -14,6 +14,7 @@ import { Route as dashboardRouteRouteImport } from './routes/(dashboard)/route'
 import { Route as authOrgSelectionRouteImport } from './routes/(auth)/org-selection'
 import { Route as dashboardIndexRouteImport } from './routes/(dashboard)/index'
 import { Route as LiveblocksAuthRouteImport } from './routes/liveblocks/auth'
+import { Route as LiveblocksUsersRouteImport } from './routes/liveblocks/users'
 import { Route as authSignInSplatRouteImport } from './routes/(auth)/sign-in.$'
 import { Route as authSignUpSplatRouteImport } from './routes/(auth)/sign-up.$'
 import { Route as dashboardWorkflowsIdIndexRouteImport } from './routes/(dashboard)/workflows/$id/index'
@@ -41,6 +42,11 @@ const LiveblocksAuthRoute = LiveblocksAuthRouteImport.update({
   path: '/liveblocks/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LiveblocksUsersRoute = LiveblocksUsersRouteImport.update({
+  id: '/liveblocks/users',
+  path: '/liveblocks/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authSignInSplatRoute = authSignInSplatRouteImport.update({
   id: '/sign-in/$',
   path: '/sign-in/$',
@@ -61,6 +67,7 @@ const dashboardWorkflowsIdIndexRoute =
 export interface FileRoutesByFullPath {
   '/org-selection': typeof authOrgSelectionRoute
   '/liveblocks/auth': typeof LiveblocksAuthRoute
+  '/liveblocks/users': typeof LiveblocksUsersRoute
   '/': typeof dashboardIndexRoute
   '/sign-in/$': typeof authSignInSplatRoute
   '/sign-up/$': typeof authSignUpSplatRoute
@@ -69,6 +76,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/org-selection': typeof authOrgSelectionRoute
   '/liveblocks/auth': typeof LiveblocksAuthRoute
+  '/liveblocks/users': typeof LiveblocksUsersRoute
   '/': typeof dashboardIndexRoute
   '/sign-in/$': typeof authSignInSplatRoute
   '/sign-up/$': typeof authSignUpSplatRoute
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/(dashboard)': typeof dashboardRouteRouteWithChildren
   '/(auth)/org-selection': typeof authOrgSelectionRoute
   '/liveblocks/auth': typeof LiveblocksAuthRoute
+  '/liveblocks/users': typeof LiveblocksUsersRoute
   '/(dashboard)/': typeof dashboardIndexRoute
   '/(auth)/sign-in/$': typeof authSignInSplatRoute
   '/(auth)/sign-up/$': typeof authSignUpSplatRoute
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/org-selection'
     | '/liveblocks/auth'
+    | '/liveblocks/users'
     | '/'
     | '/sign-in/$'
     | '/sign-up/$'
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
   to:
     | '/org-selection'
     | '/liveblocks/auth'
+    | '/liveblocks/users'
     | '/'
     | '/sign-in/$'
     | '/sign-up/$'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/(dashboard)'
     | '/(auth)/org-selection'
     | '/liveblocks/auth'
+    | '/liveblocks/users'
     | '/(dashboard)/'
     | '/(auth)/sign-in/$'
     | '/(auth)/sign-up/$'
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
   LiveblocksAuthRoute: typeof LiveblocksAuthRoute
+  LiveblocksUsersRoute: typeof LiveblocksUsersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/liveblocks/auth'
       fullPath: '/liveblocks/auth'
       preLoaderRoute: typeof LiveblocksAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/liveblocks/users': {
+      id: '/liveblocks/users'
+      path: '/liveblocks/users'
+      fullPath: '/liveblocks/users'
+      preLoaderRoute: typeof LiveblocksUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/sign-in/$': {
@@ -215,6 +235,7 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   dashboardRouteRoute: dashboardRouteRouteWithChildren,
   LiveblocksAuthRoute: LiveblocksAuthRoute,
+  LiveblocksUsersRoute: LiveblocksUsersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
