@@ -8,6 +8,7 @@ import { Canvas } from './canvas'
 import { RightSidebar } from './right-sidebar'
 
 export function WorkflowShell({ workflowId }: { workflowId: Workflow['id'] }) {
+  void workflowId
   return (
     <ResizablePanelGroup className="size-full" orientation="horizontal">
       <ResizablePanel minSize="30rem">

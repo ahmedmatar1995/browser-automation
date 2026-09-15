@@ -9,31 +9,51 @@ import {
   MiniMap,
 } from '@xyflow/react'
 import { useTheme } from 'tanstack-theme-kit'
-import type { Node, Edge, Connection, ColorMode } from '@xyflow/react'
+import type { Edge, Connection, ColorMode, NodeTypes } from '@xyflow/react'
+import { StepNode } from './step-node'
+import type { StepNodeType } from '../nodes/node-registry'
 import '@xyflow/react/dist/style.css'
 
-const initialNodes: Node[] = [
+const initialNodes: StepNodeType[] = [
   {
     id: 'start',
+    type: 'step',
     position: {
       x: 0,
       y: 0,
     },
     data: {
-      label: 'Start',
+      type: 'start',
+      kind: 'trigger',
+      title: 'Start',
+      values: {},
     },
   },
   {
     id: 'open-url',
+    type: 'step',
     position: {
-      x: 100,
-      y: 100,
+      x: 200,
+      y: 120,
     },
     data: {
-      label: 'Open URL',
+      type: 'open-url',
+      kind: 'action',
+      title: 'Open URL',
+      values: { url: 'https://youtube.com' },
     },
   },
 ]
+
+const initialEdges: Edge[] = [
+  {
+    id: 'e1-2',
+    source: 'start',
+    target: 'open-url',
+  },
+]
+
+const nodeTypes: NodeTypes = { step: StepNode }
 
 const emptySubscribe = () => () => {}
 
@@ -45,16 +65,8 @@ function useMounted() {
   )
 }
 
-const initialEdges: Edge[] = [
-  {
-    id: 'e1-2',
-    source: 'start',
-    target: 'open-url',
-  },
-]
-
 export function Canvas() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
+  const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
   const mounted = useMounted()
@@ -74,7 +86,8 @@ export function Canvas() {
   return (
     <div className="size-full">
       <ReactFlow
-        className="!bg-card !dark:bg-(--sea-ink)"
+        className="bg-card"
+        nodeTypes={nodeTypes}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
