@@ -1,3 +1,4 @@
+import { Room } from '@/features/workflows/components/room'
 import { WorkflowShell } from '@/features/workflows/components/workflow-shell'
 import { createFileRoute } from '@tanstack/react-router'
 
@@ -7,5 +8,9 @@ export const Route = createFileRoute('/(dashboard)/workflows/$id/')({
 
 function RouteComponent() {
   const { id } = Route.useParams()
-  return <WorkflowShell workflowId={id} />
+  return (
+    <Room workflowId={id}>
+      <WorkflowShell workflowId={id} />
+    </Room>
+  )
 }
