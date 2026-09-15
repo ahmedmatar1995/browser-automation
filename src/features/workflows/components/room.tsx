@@ -15,10 +15,7 @@ export function Room({
   children: ReactNode
 }) {
   return (
-    <LiveblocksProvider
-      publicApiKey={import.meta.env.VITE_LIVEBLOCKS_PUBLIC_KEY}
-      throttle={16}
-    >
+    <LiveblocksProvider authEndpoint="/liveblocks/auth" throttle={16}>
       <RoomProvider id={workflowId}>
         <ClientSideSuspense
           fallback={

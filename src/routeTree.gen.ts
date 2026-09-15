@@ -13,6 +13,7 @@ import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as dashboardRouteRouteImport } from './routes/(dashboard)/route'
 import { Route as authOrgSelectionRouteImport } from './routes/(auth)/org-selection'
 import { Route as dashboardIndexRouteImport } from './routes/(dashboard)/index'
+import { Route as LiveblocksAuthRouteImport } from './routes/liveblocks/auth'
 import { Route as authSignInSplatRouteImport } from './routes/(auth)/sign-in.$'
 import { Route as authSignUpSplatRouteImport } from './routes/(auth)/sign-up.$'
 import { Route as dashboardWorkflowsIdIndexRouteImport } from './routes/(dashboard)/workflows/$id/index'
@@ -35,6 +36,11 @@ const dashboardIndexRoute = dashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => dashboardRouteRoute,
 } as any)
+const LiveblocksAuthRoute = LiveblocksAuthRouteImport.update({
+  id: '/liveblocks/auth',
+  path: '/liveblocks/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authSignInSplatRoute = authSignInSplatRouteImport.update({
   id: '/sign-in/$',
   path: '/sign-in/$',
@@ -54,6 +60,7 @@ const dashboardWorkflowsIdIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/org-selection': typeof authOrgSelectionRoute
+  '/liveblocks/auth': typeof LiveblocksAuthRoute
   '/': typeof dashboardIndexRoute
   '/sign-in/$': typeof authSignInSplatRoute
   '/sign-up/$': typeof authSignUpSplatRoute
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/org-selection': typeof authOrgSelectionRoute
+  '/liveblocks/auth': typeof LiveblocksAuthRoute
   '/': typeof dashboardIndexRoute
   '/sign-in/$': typeof authSignInSplatRoute
   '/sign-up/$': typeof authSignUpSplatRoute
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/(dashboard)': typeof dashboardRouteRouteWithChildren
   '/(auth)/org-selection': typeof authOrgSelectionRoute
+  '/liveblocks/auth': typeof LiveblocksAuthRoute
   '/(dashboard)/': typeof dashboardIndexRoute
   '/(auth)/sign-in/$': typeof authSignInSplatRoute
   '/(auth)/sign-up/$': typeof authSignUpSplatRoute
@@ -79,14 +88,26 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/org-selection' | '/' | '/sign-in/$' | '/sign-up/$' | '/workflows/$id/'
+    | '/org-selection'
+    | '/liveblocks/auth'
+    | '/'
+    | '/sign-in/$'
+    | '/sign-up/$'
+    | '/workflows/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/org-selection' | '/' | '/sign-in/$' | '/sign-up/$' | '/workflows/$id'
+  to:
+    | '/org-selection'
+    | '/liveblocks/auth'
+    | '/'
+    | '/sign-in/$'
+    | '/sign-up/$'
+    | '/workflows/$id'
   id:
     | '__root__'
     | '/(auth)'
     | '/(dashboard)'
     | '/(auth)/org-selection'
+    | '/liveblocks/auth'
     | '/(dashboard)/'
     | '/(auth)/sign-in/$'
     | '/(auth)/sign-up/$'
@@ -96,6 +117,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
+  LiveblocksAuthRoute: typeof LiveblocksAuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -127,6 +149,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof dashboardIndexRouteImport
       parentRoute: typeof dashboardRouteRoute
+    }
+    '/liveblocks/auth': {
+      id: '/liveblocks/auth'
+      path: '/liveblocks/auth'
+      fullPath: '/liveblocks/auth'
+      preLoaderRoute: typeof LiveblocksAuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(auth)/sign-in/$': {
       id: '/(auth)/sign-in/$'
@@ -185,6 +214,7 @@ const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   dashboardRouteRoute: dashboardRouteRouteWithChildren,
+  LiveblocksAuthRoute: LiveblocksAuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
