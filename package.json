@@ -29,6 +29,7 @@
     "@tanstack/react-start": "latest",
     "@trigger.dev/react-hooks": "^4.6.0",
     "@trigger.dev/sdk": "4.6.0",
+    "@xyflow/react": "^12.11.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.3.0",
