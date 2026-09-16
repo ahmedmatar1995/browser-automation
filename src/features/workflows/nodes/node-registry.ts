@@ -8,6 +8,8 @@ export type NodeField = {
   key: string
   label: string
   placeholder?: string
+  multiline: boolean
+  required: boolean
 }
 
 export type NodeDefinition = {
@@ -39,6 +41,8 @@ export const nodeRegistry: Record<string, NodeDefinition> = {
         key: 'url',
         label: 'URL',
         placeholder: 'https://youtube.com',
+        multiline: false,
+        required: true,
       },
     ],
   },

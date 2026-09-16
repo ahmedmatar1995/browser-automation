@@ -5,6 +5,7 @@ import {
   LiveblocksProvider,
   RoomProvider,
 } from '@liveblocks/react'
+import { ReactFlowProvider } from '@xyflow/react'
 import type { ReactNode } from 'react'
 
 export function Room({
@@ -28,7 +29,7 @@ export function Room({
           })
           if (!response.ok) return undefined
           // users endpoint returns (UserInfo | null)[], Liveblocks accepts null/undefined for unknown
-          return (await response.json()) as any
+          return await response.json()
         } catch {
           return undefined
         }
@@ -45,7 +46,7 @@ export function Room({
             </div>
           }
         >
-          {children}
+          <ReactFlowProvider>{children}</ReactFlowProvider>
         </ClientSideSuspense>
       </RoomProvider>
     </LiveblocksProvider>

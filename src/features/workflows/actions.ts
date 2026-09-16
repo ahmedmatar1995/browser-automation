@@ -1,5 +1,10 @@
 import { createServerFn } from '@tanstack/react-start'
-import { listWorkflows, listWorkflow, insertWorkflow } from './data'
+import {
+  listWorkflows,
+  listWorkflow,
+  insertWorkflow,
+  deleteWorkflow,
+} from './data'
 import { auth } from '@clerk/tanstack-react-start/server'
 import { z } from 'zod'
 import type { Workflow } from '@/lib/db/schema'
@@ -41,6 +46,19 @@ export const insertWorkflowAction = createServerFn()
     if (!userId || !orgId) throw new Error('unAuthorized')
     const [workflow] = await insertWorkflow(data.name, orgId)
     return workflow
+  })
+
+const deleteWorkflowSchema = z.object({
+  id: z.string(),
+})
+
+export const deleteWorkflowAction = createServerFn()
+  .validator(deleteWorkflowSchema)
+  .handler(async ({ data }) => {
+    const { userId, orgId } = await auth()
+    if (!userId || !orgId) throw new Error('missing userId or orgId')
+    const workflowId = await deleteWorkflow(data.id, orgId)
+    return workflowId
   })
 
 export const runHelloWorldTrigger = createServerFn().handler(async () => {
