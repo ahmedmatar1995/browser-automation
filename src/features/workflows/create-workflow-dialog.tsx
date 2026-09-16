@@ -11,13 +11,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useForm } from '@tanstack/react-form'
-import { ArrowRight, Workflow } from 'lucide-react'
+import { ArrowRight, WorkflowIcon } from 'lucide-react'
 import { z } from 'zod'
 import { useMutation } from '@tanstack/react-query'
 import { insertWorkflowAction } from './actions'
 import { toast } from 'sonner'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
+import type { Workflow } from '@/lib/db/schema'
 
 const createWorkflowSchema = z.object({
   name: z.string().trim().min(1, 'Enter a name for your workflow'),
@@ -66,7 +67,7 @@ export function CreateWorkflowDialog({
       <DialogContent className="overflow-hidden rounded-2xl border border-(--sea-ink-soft) bg-background p-0 shadow-2xl sm:max-w-[460px]">
         <DialogHeader className="border-b border-border/70 bg-muted/20 px-6 pb-5 pt-6 text-left">
           <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-(--sea-ink)/10 text-(--sea-ink)">
-            <Workflow className="size-5" aria-hidden="true" />
+            <WorkflowIcon className="size-5" aria-hidden="true" />
           </div>
           <DialogTitle className="text-xl font-semibold tracking-tight">
             Create a workflow

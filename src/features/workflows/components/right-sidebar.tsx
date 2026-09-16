@@ -6,12 +6,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import type { Workflow } from '@/lib/db/schema'
+import type { Workflow, WorkflowGraph } from '@/lib/db/schema'
 import { MoreHorizontal, Play, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { deleteWorkflowAction } from '../actions'
+import { deleteWorkflowAction, runWorkflowAction } from '../actions'
 import { toast } from 'sonner'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { nodeRegistry } from '../nodes/node-registry'
@@ -286,8 +286,43 @@ function ActionsMenu({ workflowId }: { workflowId: Workflow['id'] }) {
 }
 
 function RunButton({ workflowId }: { workflowId: Workflow['id'] }) {
+  const { getNodes, getEdges } = useReactFlow<StepNodeType>()
+
+  const runWorkflow = useMutation({
+    mutationFn: async (variables: {
+      id: Workflow['id']
+      graph: WorkflowGraph
+    }) =>
+      await runWorkflowAction({
+        data: {
+          id: variables.id,
+          graph: variables.graph,
+        },
+      }),
+    onSuccess: (handle) => {
+      toast.success(`Workflow running, Handle:${handle.id}`)
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : 'something went wrong',
+      )
+    },
+  })
   return (
-    <Button variant="ghost" size="sm">
+    <Button
+      variant="ghost"
+      size="sm"
+      disabled={runWorkflow.isPending}
+      onClick={() =>
+        runWorkflow.mutate({
+          id: workflowId,
+          graph: {
+            nodes: getNodes(),
+            edges: getEdges(),
+          },
+        })
+      }
+    >
       <Play className="size-3 text-muted-foreground" />
       <span className="text-sm text-muted-foreground">Run</span>
     </Button>
@@ -325,10 +360,10 @@ export function RightSidebar({ workflowId }: { workflowId: Workflow['id'] }) {
             Editor
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="toolbar">
+        <TabsContent value="toolbar" className="flex min-h-0 flex-col">
           <Palette />
         </TabsContent>
-        <TabsContent value="editor">
+        <TabsContent value="editor" className="flex min-h-0 flex-col">
           <Inspector node={selected} />
         </TabsContent>
       </Tabs>

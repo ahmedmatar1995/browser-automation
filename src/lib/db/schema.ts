@@ -1,6 +1,8 @@
+import type { StepNodeType } from '@/features/workflows/nodes/node-registry'
+import type { Edge } from '@xyflow/react'
 import { pgTable, uuid, text, jsonb, timestamp } from 'drizzle-orm/pg-core'
 
-type WorkflowGraph = { nodes: []; edges: [] }
+export type WorkflowGraph = { nodes: StepNodeType[]; edges: Edge[] }
 
 export const workflows = pgTable('workflows', {
   id: uuid('id').primaryKey().defaultRandom(),

@@ -4,12 +4,14 @@ import {
   listWorkflow,
   insertWorkflow,
   deleteWorkflow,
+  saveWorkflowGraph,
 } from './data'
 import { auth } from '@clerk/tanstack-react-start/server'
 import { z } from 'zod'
-import type { Workflow } from '@/lib/db/schema'
+import type { Workflow, WorkflowGraph } from '@/lib/db/schema'
 import { tasks } from '@trigger.dev/sdk'
-import type { helloWorldTask } from '@/trigger/example'
+import { checkOrg, checkUser } from '@/lib/check-auth'
+import type { runWorkflowTask } from './tasks/run-workflow'
 
 export const listWorkflowsAction = createServerFn({ strict: false }).handler(
   async () => {
@@ -39,7 +41,7 @@ const insertWorkflowActionSchema = z.object({
   name: z.string(),
 })
 
-export const insertWorkflowAction = createServerFn()
+export const insertWorkflowAction = createServerFn({ strict: false })
   .validator(insertWorkflowActionSchema)
   .handler(async ({ data }) => {
     const { userId, orgId } = await auth()
@@ -61,10 +63,23 @@ export const deleteWorkflowAction = createServerFn()
     return workflowId
   })
 
-export const runHelloWorldTrigger = createServerFn().handler(async () => {
-  const handle = await tasks.trigger<typeof helloWorldTask>('hello-world', {
-    message: 'hello world trigger from tanstack react start',
-  })
-
-  return handle
+const runWorkflowSchema = z.object({
+  id: z.custom<Workflow['id']>(),
+  graph: z.custom<WorkflowGraph>(),
 })
+
+export const runWorkflowAction = createServerFn()
+  .validator(runWorkflowSchema)
+  .handler(async ({ data }) => {
+    await checkUser()
+    const { orgId } = await checkOrg()
+
+    await saveWorkflowGraph(data.id, orgId, data.graph)
+
+    const handle = await tasks.trigger<typeof runWorkflowTask>('run-workflow', {
+      workflowId: data.id,
+      orgId,
+    })
+
+    return handle
+  })
