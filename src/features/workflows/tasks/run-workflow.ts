@@ -6,13 +6,23 @@ import { nodeExecutors } from '../nodes/node-executor'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { interpolate, type NodeOutputs } from '../lib/interpolate'
 
 function ensureStagehandExtensionPath() {
   if (process.env.STAGEHAND_EXTENSION_ARCHIVE_PATH) return
   for (const candidate of [
-    join(process.cwd(), 'node_modules/@browserbasehq/stagehand/dist/assets/stagehand-extension.zip'),
-    join(dirname(fileURLToPath(import.meta.url)), '../../../../node_modules/@browserbasehq/stagehand/dist/assets/stagehand-extension.zip'),
-    join(dirname(fileURLToPath(import.meta.url)), '../../../node_modules/@browserbasehq/stagehand/dist/assets/stagehand-extension.zip'),
+    join(
+      process.cwd(),
+      'node_modules/@browserbasehq/stagehand/dist/assets/stagehand-extension.zip',
+    ),
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      '../../../../node_modules/@browserbasehq/stagehand/dist/assets/stagehand-extension.zip',
+    ),
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      '../../../node_modules/@browserbasehq/stagehand/dist/assets/stagehand-extension.zip',
+    ),
   ]) {
     if (existsSync(candidate)) {
       process.env.STAGEHAND_EXTENSION_ARCHIVE_PATH = candidate
@@ -51,16 +61,26 @@ export const runWorkflowTask = task({
       if (stagehand) return stagehand
       const bbKey = process.env.BROWSERBASE_API_KEY
       const gemKey = process.env.GEMINI_API_KEY
-      if (!bbKey) throw new Error('BROWSERBASE_API_KEY is not set — add it to .env and Trigger.dev dashboard env')
-      if (!gemKey) throw new Error('GEMINI_API_KEY is not set — add it to .env and Trigger.dev dashboard env')
+      if (!bbKey)
+        throw new Error(
+          'BROWSERBASE_API_KEY is not set — add it to .env and Trigger.dev dashboard env',
+        )
+      if (!gemKey)
+        throw new Error(
+          'GEMINI_API_KEY is not set — add it to .env and Trigger.dev dashboard env',
+        )
 
       ensureStagehandExtensionPath()
-      const { browserbase, Stagehand } = await import('@browserbasehq/stagehand')
+      const { browserbase, Stagehand } =
+        await import('@browserbasehq/stagehand')
 
       try {
         browser = await browserbase.launch({ apiKey: bbKey })
       } catch (err) {
-        logger.error('Browserbase launch failed', { error: err instanceof Error ? err.message : String(err), cause: (err as Error)?.cause })
+        logger.error('Browserbase launch failed', {
+          error: err instanceof Error ? err.message : String(err),
+          cause: (err as Error)?.cause,
+        })
         throw err
       }
 
@@ -73,7 +93,10 @@ export const runWorkflowTask = task({
         // Surface the *cause* — Stagehand wraps extension upload errors opaquely
         logger.error('Stagehand.create failed', {
           error: err instanceof Error ? err.message : String(err),
-          cause: err instanceof Error ? (err as unknown as { cause?: unknown }).cause : undefined,
+          cause:
+            err instanceof Error
+              ? (err as unknown as { cause?: unknown }).cause
+              : undefined,
           extensionPath: process.env.STAGEHAND_EXTENSION_ARCHIVE_PATH,
         })
         throw new Error(
@@ -85,6 +108,8 @@ export const runWorkflowTask = task({
       return stagehand
     }
 
+    const outputs: NodeOutputs = {}
+
     try {
       for (const id of order) {
         const node = byId.get(id)
@@ -92,7 +117,14 @@ export const runWorkflowTask = task({
         logger.log(`Running step ${node.data.title}`)
 
         const executor = nodeExecutors[node.data.type]
-        if (executor) await executor({ values: node.data.values, getStagehand })
+        if (!executor) continue
+        const values = Object.fromEntries(
+          Object.entries(node.data.values).map(([key, text]) => [
+            key,
+            interpolate({ text, outputs }),
+          ]),
+        )
+        outputs[id] = await executor({ values, getStagehand })
       }
 
       return { steps: order.length }

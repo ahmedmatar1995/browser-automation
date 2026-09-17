@@ -12,6 +12,11 @@ export type NodeField = {
   required: boolean
 }
 
+export type NodeOutputs = {
+  path: string
+  label: string
+}
+
 export type NodeDefinition = {
   kind: StepNodeKind
   type: string
@@ -19,6 +24,7 @@ export type NodeDefinition = {
   accent?: string
   icon: LucideIcon
   fields: NodeField[]
+  outputs: NodeOutputs[]
 }
 
 export const nodeRegistry: Record<string, NodeDefinition> = {
@@ -29,6 +35,7 @@ export const nodeRegistry: Record<string, NodeDefinition> = {
     icon: MousePointerClick,
     accent: 'bg-blue-500 text-white',
     fields: [],
+    outputs: [],
   },
   'open-url': {
     type: 'open-url',
@@ -43,6 +50,16 @@ export const nodeRegistry: Record<string, NodeDefinition> = {
         placeholder: 'https://youtube.com',
         multiline: false,
         required: true,
+      },
+    ],
+    outputs: [
+      {
+        path: 'url',
+        label: 'URL',
+      },
+      {
+        path: 'title',
+        label: 'Title',
       },
     ],
   },
