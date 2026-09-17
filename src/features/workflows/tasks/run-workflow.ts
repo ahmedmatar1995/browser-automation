@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import toposort from 'toposort'
-import { logger, task } from '@trigger.dev/sdk'
+import { logger, task, metadata } from '@trigger.dev/sdk'
 import { listWorkflow } from '../data'
 import { nodeExecutors } from '../nodes/node-executor'
 import { existsSync } from 'node:fs'
@@ -31,6 +31,11 @@ function ensureStagehandExtensionPath() {
   }
 }
 
+export type RunStep = {
+  nodeId: string
+  status: 'pending' | 'running' | 'done' | 'failed'
+}
+
 export const runWorkflowTask = task({
   id: 'run-workflow',
   run: async ({ workflowId, orgId }: { workflowId: string; orgId: string }) => {
@@ -50,6 +55,13 @@ export const runWorkflowTask = task({
       .filter((id: string) => connected.has(id))
 
     logger.log(`${workflow.name} running, ${order.length}`)
+
+    const steps: RunStep[] = order.map((id) => ({
+      nodeId: id,
+      status: 'pending',
+    }))
+
+    metadata.set('steps', steps)
 
     // Stagehand/Browser handles — `any` to dodge strict `never` overload on `browserbase.launch` in this kit version
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,23 +123,47 @@ export const runWorkflowTask = task({
     const outputs: NodeOutputs = {}
 
     try {
-      for (const id of order) {
+      for (let i = 0; i < order.length; i++) {
+        const id = order[i]
+        const step = steps[i]
         const node = byId.get(id)
-        if (!node) continue
+        if (!node) {
+          if (step) {
+            step.status = 'done'
+            metadata.set('steps', steps)
+          }
+          continue
+        }
         logger.log(`Running step ${node.data.title}`)
 
         const executor = nodeExecutors[node.data.type]
-        if (!executor) continue
+        if (!executor) {
+          step.status = 'done'
+          metadata.set('steps', steps)
+          continue
+        }
+        step.status = 'running'
+        metadata.set('steps', steps)
+        await metadata.flush()
         const values = Object.fromEntries(
           Object.entries(node.data.values).map(([key, text]) => [
             key,
             interpolate({ text, outputs }),
           ]),
         )
-        outputs[id] = await executor({ values, getStagehand })
+        try {
+          outputs[id] = await executor({ values, getStagehand })
+          step.status = 'done'
+          metadata.set('steps', steps)
+        } catch (err) {
+          step.status = 'failed'
+          metadata.set('steps', steps)
+          await metadata.flush()
+          throw err
+        }
       }
 
-      return { steps: order.length }
+      return { steps }
     } finally {
       // Stagehand owns the Browserbase session via `browser` — closing stagehand
       // tears down the context/pages and releases the remote session. `browser`

@@ -7,8 +7,15 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { Workflow, WorkflowGraph } from '@/lib/db/schema'
-import { MoreHorizontal, Play, Trash2Icon } from 'lucide-react'
-import { useState } from 'react'
+import {
+  MoreHorizontal,
+  Play,
+  Plus,
+  Trash2Icon,
+  Unplug,
+  Variable,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { deleteWorkflowAction, runWorkflowAction } from '../actions'
@@ -32,6 +39,8 @@ import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+
+import { useUpStreamConnections } from '../hooks/use-upstream-connections'
 
 function NodeIcon({ type, className }: { type: NodeType; className?: string }) {
   const def = nodeRegistry[type]
@@ -194,6 +203,14 @@ function Field({
 function Inspector({ node }: { node: StepNodeType | undefined }) {
   const { updateNodeData } = useReactFlow<StepNodeType>()
 
+  const connections = useUpStreamConnections()
+  const [activeFieldKey, setActiveFieldKey] = useState<string | null>(null)
+
+  const nodeId = node?.id
+  useEffect(() => {
+    setActiveFieldKey(null)
+  }, [nodeId])
+
   if (!node) {
     return (
       <Section title="Editor">
@@ -201,8 +218,30 @@ function Inspector({ node }: { node: StepNodeType | undefined }) {
       </Section>
     )
   }
-  const { type, title, kind, values } = node.data
+
+  const { type, title, values } = node.data
   const def = nodeRegistry[type]
+
+  if (!def) {
+    return (
+      <Section title={title}>
+        <p className="p-3 text-xs text-muted-foreground">
+          Unknown node type “{type}”. Remove it and add a new step.
+        </p>
+      </Section>
+    )
+  }
+
+  const targetKey = activeFieldKey ?? def.fields[0]?.key
+  const targetField = def.fields.find((f) => f.key === targetKey)
+  const insertToken = (token: string) => {
+    if (!targetKey) return
+    const current = values[targetKey] ?? ''
+    const sep = current === '' || /\s$/.test(current) ? '' : ' '
+    updateNodeData(node.id, {
+      values: { ...values, [targetKey]: current + sep + token },
+    })
+  }
 
   return (
     <Section title={title} icon={<NodeIcon type={type} />}>
@@ -212,9 +251,16 @@ function Inspector({ node }: { node: StepNodeType | undefined }) {
         ) : (
           <>
             {def.fields.map((field) => (
-              <div key={field.key} className="flex flex-col gap-1.5">
+              <div
+                key={field.key}
+                className="flex flex-col gap-1.5"
+                onFocus={() => setActiveFieldKey(field.key)}
+              >
                 <Label htmlFor={field.key} className="text-xs">
                   {field.label}
+                  {field.required && (
+                    <span className="text-destructive"> *</span>
+                  )}
                 </Label>
                 <Field
                   field={field}
@@ -229,6 +275,75 @@ function Inspector({ node }: { node: StepNodeType | undefined }) {
             ))}
           </>
         )}
+      </div>
+
+      <div className="border-t border-border">
+        <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1">
+          <Variable className="size-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold">Variables</span>
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+            {connections.length}
+          </span>
+        </div>
+
+        {def.fields.length > 1 && connections.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1 px-3 pb-1.5">
+            <span className="text-[11px] text-muted-foreground">
+              Insert into:
+            </span>
+            {def.fields.map((field) => (
+              <Button
+                key={field.key}
+                size="xs"
+                variant={field.key === targetKey ? 'secondary' : 'ghost'}
+                onClick={() => setActiveFieldKey(field.key)}
+                className="h-6 text-[11px]"
+              >
+                {field.label}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        {targetField && connections.length > 0 && (
+          <p className="px-3 pb-1.5 text-[11px] text-muted-foreground">
+            Click a variable to insert it into {targetField.label}.
+          </p>
+        )}
+
+        <div className="flex flex-col gap-0.5 px-1.5 pb-3">
+          {connections.length === 0 ? (
+            <div className="mx-1.5 flex flex-col items-center gap-1 rounded-lg border border-dashed border-border px-3 py-4 text-center">
+              <Unplug className="size-4 text-muted-foreground" />
+              <p className="text-xs font-medium">No upstream outputs</p>
+              <p className="text-[11px] leading-snug text-muted-foreground">
+                Connect a step before this one, then pick its outputs here.
+              </p>
+            </div>
+          ) : (
+            connections.map((conn) => (
+              <Button
+                key={conn.token}
+                variant="ghost"
+                onClick={() => insertToken(conn.token)}
+                disabled={!targetKey}
+                title={conn.token}
+                className="h-auto justify-start gap-2 px-1.5 py-1.5 text-left"
+              >
+                <NodeIcon type={conn.nodeType} className="size-5" />
+                <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                  <span className="w-full truncate text-xs font-medium">
+                    {conn.label}
+                  </span>
+                  <code className="w-full truncate rounded bg-muted px-1 py-px font-mono text-[11px] font-normal text-muted-foreground">
+                    {conn.token}
+                  </code>
+                </span>
+                <Plus className="size-3.5 shrink-0 text-muted-foreground" />
+              </Button>
+            ))
+          )}
+        </div>
       </div>
     </Section>
   )

@@ -10,6 +10,7 @@ import { auth } from '@clerk/tanstack-react-start/server'
 import { z } from 'zod'
 import type { Workflow, WorkflowGraph } from '@/lib/db/schema'
 import { tasks } from '@trigger.dev/sdk'
+import { auth as triggerAuth } from '@trigger.dev/sdk'
 import { checkOrg, checkUser } from '@/lib/check-auth'
 import type { runWorkflowTask } from './tasks/run-workflow'
 
@@ -76,10 +77,38 @@ export const runWorkflowAction = createServerFn()
 
     await saveWorkflowGraph(data.id, orgId, data.graph)
 
-    const handle = await tasks.trigger<typeof runWorkflowTask>('run-workflow', {
-      workflowId: data.id,
-      orgId,
-    })
+    const handle = await tasks.trigger<typeof runWorkflowTask>(
+      'run-workflow',
+      {
+        workflowId: data.id,
+        orgId,
+      },
+      {
+        tags: [`workflow:${data.id}`],
+      },
+    )
 
     return handle
+  })
+
+const runsTokenSchema = z.object({
+  workflowId: z.custom<Workflow['id']>(),
+})
+
+// Server-only: mints a short-lived public token scoped to read this
+// workflow's runs. Must stay in a server fn — @trigger.dev/sdk uses
+// AsyncLocalStorage and crashes the browser bundle if imported client-side.
+export const getWorkflowRunsTokenAction = createServerFn({ strict: false })
+  .validator(runsTokenSchema)
+  .handler(async ({ data }) => {
+    await checkUser()
+    await checkOrg()
+    return await triggerAuth.createPublicToken({
+      scopes: {
+        read: {
+          tags: [`workflow:${data.workflowId}`],
+        },
+      },
+      expirationTime: '1hr',
+    })
   })
