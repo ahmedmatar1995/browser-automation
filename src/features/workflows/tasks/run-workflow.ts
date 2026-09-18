@@ -86,14 +86,72 @@ export const runWorkflowTask = task({
       const { browserbase, Stagehand } =
         await import('@browserbasehq/stagehand')
 
+      // Stagehand swallows the real session-creation error behind a generic
+      // "Failed to create a Browserbase session", so validate the key first
+      // with a cheap API call — auth/quota problems then surface with their
+      // real status and message instead of a mystery failure at launch.
+      const { Browserbase } = await import('@browserbasehq/sdk')
       try {
-        browser = await browserbase.launch({ apiKey: bbKey })
+        await new Browserbase({ apiKey: bbKey }).projects.list()
       } catch (err) {
+        const status =
+          err instanceof Error
+            ? (err as unknown as { status?: unknown }).status
+            : undefined
+        logger.error('Browserbase API key check failed', {
+          error: err instanceof Error ? err.message : String(err),
+          status,
+        })
+        throw new Error(
+          `Browserbase rejected the API key (status ${String(status ?? 'unknown')}: ${err instanceof Error ? err.message : String(err)}). Check BROWSERBASE_API_KEY in the Trigger.dev dashboard env, plus plan/quota on the Browserbase dashboard.`,
+          { cause: err },
+        )
+      }
+
+      // BROWSERBASE_PROJECT_ID is optional — only needed when the key has
+      // no default project to create sessions under.
+      const projectId = process.env.BROWSERBASE_PROJECT_ID?.trim() || undefined
+
+      try {
+        browser = await browserbase.launch({
+          apiKey: bbKey,
+          ...(projectId ? { projectId } : {}),
+        })
+      } catch (err) {
+        // Stagehand throws without the real API error, so probe a raw
+        // session creation with identical params to capture the true
+        // status/message. A probe session that succeeds is released
+        // immediately to avoid quota leaks or charges.
+        let probeStatus: unknown = 'not attempted'
+        let probeMessage = ''
+        try {
+          const probeClient = new Browserbase({ apiKey: bbKey })
+          const probeSession = await probeClient.sessions.create({
+            ...(projectId ? { projectId } : {}),
+          })
+          probeMessage = `probe unexpectedly succeeded (id ${probeSession.id})`
+          await probeClient.sessions
+            .update(probeSession.id, { status: 'REQUEST_RELEASE' })
+            .catch(() => undefined)
+        } catch (probeErr) {
+          probeStatus =
+            probeErr instanceof Error
+              ? (probeErr as unknown as { status?: unknown }).status
+              : undefined
+          probeMessage =
+            probeErr instanceof Error ? probeErr.message : String(probeErr)
+        }
         logger.error('Browserbase launch failed', {
           error: err instanceof Error ? err.message : String(err),
           cause: (err as Error)?.cause,
+          projectId: projectId ?? '(default)',
+          probeStatus,
+          probeMessage,
         })
-        throw err
+        throw new Error(
+          `Browserbase session creation failed (API says: status ${String(probeStatus)} — ${probeMessage}). Most likely the key has no default project: set BROWSERBASE_PROJECT_ID (Browserbase Settings) in .env and the Trigger.dev dashboard env. Otherwise check plan/quota and concurrent-session limits.`,
+          { cause: err },
+        )
       }
 
       // Every run gets a fresh Browserbase session. Log its ID so the

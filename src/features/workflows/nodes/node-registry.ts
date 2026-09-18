@@ -1,5 +1,12 @@
 import type { Node } from '@xyflow/react'
-import { Bot, Globe, MousePointerClick, Pointer, ScanText } from 'lucide-react'
+import {
+  Bot,
+  Globe,
+  Mail,
+  MousePointerClick,
+  Pointer,
+  ScanText,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export type StepNodeKind = 'trigger' | 'action'
@@ -166,6 +173,42 @@ export const nodeRegistry: Record<string, NodeDefinition> = {
       {
         path: 'url',
         label: 'URL',
+      },
+    ],
+  },
+  'send-mail': {
+    type: 'send-mail',
+    kind: 'action',
+    label: 'Send Mail',
+    icon: Mail,
+    accent: 'bg-teal-500 text-white',
+    fields: [
+      {
+        key: 'to',
+        label: 'To',
+        placeholder: 'example@gmail.com',
+        required: true,
+        multiline: false,
+      },
+      {
+        key: 'subject',
+        label: 'Subject',
+        placeholder: 'Hello',
+        required: true,
+        multiline: false,
+      },
+      {
+        key: 'body',
+        label: 'Body',
+        placeholder: 'Write your message',
+        required: true,
+        multiline: false,
+      },
+    ],
+    outputs: [
+      {
+        path: 'id',
+        label: 'Email ID',
       },
     ],
   },
