@@ -96,6 +96,16 @@ export const runWorkflowTask = task({
         throw err
       }
 
+      // Every run gets a fresh Browserbase session. Log its ID so the
+      // session viewer link for *this* run is easy to find — old links
+      // point at old sessions and never update.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const browserSessionId: string | undefined = browser?.sessionId
+      if (browserSessionId) {
+        logger.log(`Browserbase session: ${browserSessionId}`)
+        metadata.set('browserSessionId', browserSessionId)
+      }
+
       try {
         stagehand = await Stagehand.create({
           browser,
