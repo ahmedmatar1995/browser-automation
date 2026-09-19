@@ -34,7 +34,7 @@ export const nodeExecutors: Partial<Record<NodeType, NodeExecutor>> = {
       stagehand: await getStagehand(),
       instructions: values.instructions,
     }),
-  sendMail: async ({ values }: NodeContext) =>
+  'send-mail': async ({ values }: NodeContext) =>
     sendMail({
       to: values.to,
       subject: values.subject,

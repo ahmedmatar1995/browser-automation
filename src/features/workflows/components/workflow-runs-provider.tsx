@@ -55,6 +55,22 @@ export function useWorkflowRuns() {
   return value
 }
 
+// The realtime hook types createdAt as Date, but SSE payloads can arrive as
+// ISO strings at runtime. Normalize at the boundary so every reader below
+// can safely call Date methods without crashing the panel.
+function toDate(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(value)
+}
+
+function isRunLive(run: WorkflowRun) {
+  return run.status === 'QUEUED' || run.status === 'EXECUTING'
+}
+
+function stepsForRun(run: WorkflowRun): RunStep[] {
+  const metadataSteps = run.metadata?.steps as RunStep[] | undefined
+  return run.output?.steps ?? metadataSteps ?? []
+}
+
 interface LatestRunSteps {
   steps: RunStep[]
   // True while the latest run is queued or executing — i.e. still producing steps.
@@ -66,7 +82,8 @@ export function useLatestRunSteps(): LatestRunSteps {
 
   return useMemo<LatestRunSteps>(() => {
     const latest = runs.reduce<WorkflowRun | undefined>((newest, run) => {
-      if (!newest || run.createdAt > newest.createdAt) return run
+      if (!newest || toDate(run.createdAt) > toDate(newest.createdAt))
+        return run
       return newest
     }, undefined)
 
@@ -77,4 +94,32 @@ export function useLatestRunSteps(): LatestRunSteps {
 
     return { steps, isLive }
   }, [runs])
+}
+
+export type ConsoleRun = {
+  id: string
+  status: WorkflowRun['status']
+  createdAt: Date
+  isLive: boolean
+  steps: RunStep[]
+}
+
+export function useConsoleRuns(): ConsoleRun[] {
+  const { runs } = useWorkflowRuns()
+
+  return useMemo<ConsoleRun[]>(
+    () =>
+      [...runs]
+        .sort(
+          (a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime(),
+        )
+        .map((run) => ({
+          id: run.id,
+          status: run.status,
+          createdAt: toDate(run.createdAt),
+          isLive: isRunLive(run),
+          steps: stepsForRun(run),
+        })),
+    [runs],
+  )
 }

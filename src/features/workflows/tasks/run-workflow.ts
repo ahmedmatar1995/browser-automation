@@ -7,6 +7,8 @@ import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { interpolate, type NodeOutputs } from '../lib/interpolate'
+import type { NodeType } from '../nodes/node-registry'
+import type { DeserializedJson } from '@trigger.dev/core'
 
 function ensureStagehandExtensionPath() {
   if (process.env.STAGEHAND_EXTENSION_ARCHIVE_PATH) return
@@ -34,6 +36,11 @@ function ensureStagehandExtensionPath() {
 export type RunStep = {
   nodeId: string
   status: 'pending' | 'running' | 'done' | 'failed'
+  type?: NodeType
+  title?: string
+  durationMs?: number
+  output?: unknown
+  error?: string
 }
 
 export const runWorkflowTask = task({
@@ -56,12 +63,19 @@ export const runWorkflowTask = task({
 
     logger.log(`${workflow.name} running, ${order.length}`)
 
-    const steps: RunStep[] = order.map((id) => ({
-      nodeId: id,
-      status: 'pending',
-    }))
+    const steps: RunStep[] = order.map((id) => {
+      const node = byId.get(id)
+      return {
+        nodeId: id,
+        status: 'pending',
+        type: node?.data.type,
+        title: node?.data.title,
+      }
+    })
 
-    metadata.set('steps', steps)
+    const publishSteps = () =>
+      metadata.set('steps', steps as unknown as DeserializedJson[])
+    publishSteps()
 
     // Stagehand/Browser handles — `any` to dodge strict `never` overload on `browserbase.launch` in this kit version
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -198,7 +212,7 @@ export const runWorkflowTask = task({
         if (!node) {
           if (step) {
             step.status = 'done'
-            metadata.set('steps', steps)
+            publishSteps()
           }
           continue
         }
@@ -207,11 +221,12 @@ export const runWorkflowTask = task({
         const executor = nodeExecutors[node.data.type]
         if (!executor) {
           step.status = 'done'
-          metadata.set('steps', steps)
+          publishSteps()
+
           continue
         }
         step.status = 'running'
-        metadata.set('steps', steps)
+        publishSteps()
         await metadata.flush()
         const values = Object.fromEntries(
           Object.entries(node.data.values).map(([key, text]) => [
@@ -219,14 +234,21 @@ export const runWorkflowTask = task({
             interpolate({ text, outputs }),
           ]),
         )
+
+        const startedAt = Date.now()
         try {
-          outputs[id] = await executor({ values, getStagehand })
+          const output = await executor({ values, getStagehand })
+          outputs[id] = output
+          step.output = output
           step.status = 'done'
-          metadata.set('steps', steps)
+          publishSteps()
         } catch (err) {
           step.status = 'failed'
-          metadata.set('steps', steps)
+          step.durationMs = Date.now() - startedAt
+          step.error = err instanceof Error ? err.message : String(err)
+          publishSteps()
           await metadata.flush()
+
           throw err
         }
       }

@@ -88,7 +88,10 @@ export const runWorkflowAction = createServerFn()
       },
     )
 
-    return handle
+    // Return only the run id — the raw Trigger handle isn't serializable
+    // (it carries the task's output type with `unknown` fields) and the
+    // client only needs the id for toasts and realtime hooks.
+    return { id: handle.id }
   })
 
 const runsTokenSchema = z.object({

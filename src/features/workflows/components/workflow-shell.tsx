@@ -6,6 +6,7 @@ import {
 import type { Workflow } from '@/lib/db/schema'
 import { Canvas } from './canvas'
 import { RightSidebar } from './right-sidebar'
+import { ConsolePanel } from './console-panel'
 
 export function WorkflowShell({ workflowId }: { workflowId: Workflow['id'] }) {
   void workflowId
@@ -18,9 +19,7 @@ export function WorkflowShell({ workflowId }: { workflowId: Workflow['id'] }) {
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize="8rem" minSize="6rem">
-            <div className="flex size-full items-center justify-center">
-              logs
-            </div>
+            <ConsolePanel />
           </ResizablePanel>
         </ResizablePanelGroup>
       </ResizablePanel>
