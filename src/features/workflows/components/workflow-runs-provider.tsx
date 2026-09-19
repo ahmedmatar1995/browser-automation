@@ -96,12 +96,17 @@ export function useLatestRunSteps(): LatestRunSteps {
   }, [runs])
 }
 
+function sessionIdForRun(run: WorkflowRun): string | undefined {
+  return run.output?.browserbaseSessionId
+}
+
 export type ConsoleRun = {
   id: string
   status: WorkflowRun['status']
   createdAt: Date
   isLive: boolean
   steps: RunStep[]
+  browserbaseSessionId: string | undefined
 }
 
 export function useConsoleRuns(): ConsoleRun[] {
@@ -111,7 +116,8 @@ export function useConsoleRuns(): ConsoleRun[] {
     () =>
       [...runs]
         .sort(
-          (a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime(),
+          (a, b) =>
+            toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime(),
         )
         .map((run) => ({
           id: run.id,
@@ -119,6 +125,7 @@ export function useConsoleRuns(): ConsoleRun[] {
           createdAt: toDate(run.createdAt),
           isLive: isRunLive(run),
           steps: stepsForRun(run),
+          browserbaseSessionId: sessionIdForRun(run),
         })),
     [runs],
   )

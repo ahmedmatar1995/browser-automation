@@ -83,6 +83,8 @@ export const runWorkflowTask = task({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let browser: any = null
 
+    let browserbaseSessionId: string | undefined = undefined
+
     const getStagehand = async () => {
       if (stagehand) return stagehand
       const bbKey = process.env.BROWSERBASE_API_KEY
@@ -172,10 +174,10 @@ export const runWorkflowTask = task({
       // session viewer link for *this* run is easy to find — old links
       // point at old sessions and never update.
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const browserSessionId: string | undefined = browser?.sessionId
-      if (browserSessionId) {
-        logger.log(`Browserbase session: ${browserSessionId}`)
-        metadata.set('browserSessionId', browserSessionId)
+      browserbaseSessionId = browser?.sessionId
+      if (browserbaseSessionId) {
+        logger.log(`Browserbase session: ${browserbaseSessionId}`)
+        metadata.set('browserSessionId', browserbaseSessionId)
       }
 
       try {
@@ -253,7 +255,7 @@ export const runWorkflowTask = task({
         }
       }
 
-      return { steps }
+      return { steps, browserbaseSessionId }
     } finally {
       // Stagehand owns the Browserbase session via `browser` — closing stagehand
       // tears down the context/pages and releases the remote session. `browser`

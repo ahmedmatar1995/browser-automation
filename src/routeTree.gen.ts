@@ -15,6 +15,7 @@ import { Route as authOrgSelectionRouteImport } from './routes/(auth)/org-select
 import { Route as dashboardIndexRouteImport } from './routes/(dashboard)/index'
 import { Route as LiveblocksAuthRouteImport } from './routes/liveblocks/auth'
 import { Route as LiveblocksUsersRouteImport } from './routes/liveblocks/users'
+import { Route as ReplaysSessionIdRouteImport } from './routes/replays/$sessionId'
 import { Route as authSignInSplatRouteImport } from './routes/(auth)/sign-in.$'
 import { Route as authSignUpSplatRouteImport } from './routes/(auth)/sign-up.$'
 import { Route as dashboardWorkflowsIdIndexRouteImport } from './routes/(dashboard)/workflows/$id/index'
@@ -47,6 +48,11 @@ const LiveblocksUsersRoute = LiveblocksUsersRouteImport.update({
   path: '/liveblocks/users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReplaysSessionIdRoute = ReplaysSessionIdRouteImport.update({
+  id: '/replays/$sessionId',
+  path: '/replays/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authSignInSplatRoute = authSignInSplatRouteImport.update({
   id: '/sign-in/$',
   path: '/sign-in/$',
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/org-selection': typeof authOrgSelectionRoute
   '/liveblocks/auth': typeof LiveblocksAuthRoute
   '/liveblocks/users': typeof LiveblocksUsersRoute
+  '/replays/$sessionId': typeof ReplaysSessionIdRoute
   '/': typeof dashboardIndexRoute
   '/sign-in/$': typeof authSignInSplatRoute
   '/sign-up/$': typeof authSignUpSplatRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/org-selection': typeof authOrgSelectionRoute
   '/liveblocks/auth': typeof LiveblocksAuthRoute
   '/liveblocks/users': typeof LiveblocksUsersRoute
+  '/replays/$sessionId': typeof ReplaysSessionIdRoute
   '/': typeof dashboardIndexRoute
   '/sign-in/$': typeof authSignInSplatRoute
   '/sign-up/$': typeof authSignUpSplatRoute
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/(auth)/org-selection': typeof authOrgSelectionRoute
   '/liveblocks/auth': typeof LiveblocksAuthRoute
   '/liveblocks/users': typeof LiveblocksUsersRoute
+  '/replays/$sessionId': typeof ReplaysSessionIdRoute
   '/(dashboard)/': typeof dashboardIndexRoute
   '/(auth)/sign-in/$': typeof authSignInSplatRoute
   '/(auth)/sign-up/$': typeof authSignUpSplatRoute
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/org-selection'
     | '/liveblocks/auth'
     | '/liveblocks/users'
+    | '/replays/$sessionId'
     | '/'
     | '/sign-in/$'
     | '/sign-up/$'
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/org-selection'
     | '/liveblocks/auth'
     | '/liveblocks/users'
+    | '/replays/$sessionId'
     | '/'
     | '/sign-in/$'
     | '/sign-up/$'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/(auth)/org-selection'
     | '/liveblocks/auth'
     | '/liveblocks/users'
+    | '/replays/$sessionId'
     | '/(dashboard)/'
     | '/(auth)/sign-in/$'
     | '/(auth)/sign-up/$'
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
   LiveblocksAuthRoute: typeof LiveblocksAuthRoute
   LiveblocksUsersRoute: typeof LiveblocksUsersRoute
+  ReplaysSessionIdRoute: typeof ReplaysSessionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -175,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/liveblocks/users'
       fullPath: '/liveblocks/users'
       preLoaderRoute: typeof LiveblocksUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/replays/$sessionId': {
+      id: '/replays/$sessionId'
+      path: '/replays/$sessionId'
+      fullPath: '/replays/$sessionId'
+      preLoaderRoute: typeof ReplaysSessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/sign-in/$': {
@@ -236,6 +256,7 @@ const rootRouteChildren: RootRouteChildren = {
   dashboardRouteRoute: dashboardRouteRouteWithChildren,
   LiveblocksAuthRoute: LiveblocksAuthRoute,
   LiveblocksUsersRoute: LiveblocksUsersRoute,
+  ReplaysSessionIdRoute: ReplaysSessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
